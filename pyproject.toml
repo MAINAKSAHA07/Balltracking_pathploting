@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ball_tracking"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "matplotlib>=3.9.2",
+    "opencv-python>=4.10.0.84",
+    "rerun-sdk>=0.23.3",
+]
+
+[project.scripts]
+tracking = "ball_tracking.tracking:main"
+trajectory = "ball_tracking.trajectory:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "ruff>=0.9.9",
+]
