@@ -44,7 +44,7 @@ uv run python src/ball_tracking/trajectory_rerun.py
 ```bash
 uv run web
 ```
-Then open http://localhost:5000 in your browser to upload and analyze videos!
+Then open http://localhost:5001 in your browser to upload and analyze videos!
 
 ## 🌐 Web Application Features
 
@@ -109,7 +109,7 @@ The web application provides a modern, user-friendly interface for ball tracking
 pip install -r requirements.txt
 
 # Run the web application
-python -m ball_tracking.web
+python -m ball_tracking.web --port 5001
 ```
 
 ### Production Deployment
@@ -122,7 +122,7 @@ python -m ball_tracking.web
 2. **Using Gunicorn (recommended for production)**:
    ```bash
    pip install gunicorn
-   gunicorn -w 4 -b 0.0.0.0:5000 ball_tracking.web:app
+   gunicorn -w 4 -b 0.0.0.0:5001 ball_tracking.web:app
    ```
 
 3. **Environment Variables**:
@@ -139,7 +139,7 @@ python -m ball_tracking.web
        server_name your-domain.com;
        
        location / {
-           proxy_pass http://127.0.0.1:5000;
+           proxy_pass http://127.0.0.1:5001;
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -159,8 +159,8 @@ RUN pip install -r requirements.txt
 COPY . .
 RUN mkdir -p uploads results logs
 
-EXPOSE 5000
-CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "ball_tracking.web:app"]
+EXPOSE 5001
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5001", "ball_tracking.web:app"]
 ```
 
 ## 📁 Project Structure
