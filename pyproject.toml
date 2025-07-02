@@ -12,11 +12,16 @@ dependencies = [
     "matplotlib>=3.9.2",
     "opencv-python>=4.10.0.84",
     "rerun-sdk>=0.23.3",
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+    "werkzeug>=3.0.0",
+    "pillow>=10.0.0",
 ]
 
 [project.scripts]
 tracking = "ball_tracking.tracking:main"
 trajectory = "ball_tracking.trajectory:main"
+web = "ball_tracking.web:main"
 
 [dependency-groups]
 dev = [

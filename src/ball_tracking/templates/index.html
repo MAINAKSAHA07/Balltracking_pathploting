@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ball Tracking Analysis</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .upload-section, .analysis-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        .upload-area {
+            border: 3px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background-color: #f7fafc;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #edf2f7;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            color: #a0aec0;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 0.9rem;
+            color: #718096;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .progress-container {
+            margin: 20px 0;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #4a5568;
+        }
+
+        .video-info {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .info-value {
+            color: #2d3748;
+        }
+
+        .results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 30px;
+        }
+
+        .video-display {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .video-frame {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .trajectory-canvas {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background-color: #c6f6d5;
+            color: #22543d;
+        }
+
+        .status.error {
+            background-color: #fed7d7;
+            color: #742a2a;
+        }
+
+        .status.info {
+            background-color: #bee3f8;
+            color: #2a4365;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .control-group input {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Ball Tracking Analysis</h1>
+            <p>Upload your video and analyze ball trajectories in real-time</p>
+        </div>
+
+        <div class="main-content">
+            <div class="upload-section">
+                <h2 class="section-title">📁 Upload Video</h2>
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📹</div>
+                    <div class="upload-text">Drop your video file here or click to browse</div>
+                    <div class="upload-hint">Supported formats: MP4, AVI, MOV, MKV, WEBM (max 100MB)</div>
+                </div>
+                <input type="file" id="fileInput" accept="video/*">
+                
+                <div id="uploadStatus"></div>
+                
+                <div id="videoInfo" style="display: none;">
+                    <div class="video-info">
+                        <h3>Video Information</h3>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Filename:</span>
+                                <span class="info-value" id="filename"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Resolution:</span>
+                                <span class="info-value" id="resolution"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">FPS:</span>
+                                <span class="info-value" id="fps"></span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Total Frames:</span>
+                                <span class="info-value" id="totalFrames"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analysis-section">
+                <h2 class="section-title">🔍 Analysis Controls</h2>
+                <div id="analysisControls" style="display: none;">
+                    <div class="controls">
+                        <div class="control-group">
+                            <label for="startFrame">Start Frame:</label>
+                            <input type="number" id="startFrame" value="0" min="0">
+                        </div>
+                        <div class="control-group">
+                            <label for="endFrame">End Frame:</label>
+                            <input type="number" id="endFrame" value="0" min="0">
+                        </div>
+                        <div class="control-group">
+                            <label for="stepSize">Step Size:</label>
+                            <input type="number" id="stepSize" value="1" min="1" max="10">
+                        </div>
+                    </div>
+                    
+                    <button class="btn" id="analyzeBtn">
+                        <span class="loading" id="analyzeLoading" style="display: none;"></span>
+                        Start Analysis
+                    </button>
+                    
+                    <div id="analysisStatus"></div>
+                    
+                    <div class="progress-container" id="progressContainer" style="display: none;">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">0%</div>
+                    </div>
+                </div>
+                
+                <div id="noVideoMessage">
+                    <p style="text-align: center; color: #718096; font-style: italic;">
+                        Upload a video to start analysis
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2 class="section-title">📊 Analysis Results</h2>
+            <div id="resultsContent">
+                <div class="video-display">
+                    <h3>Current Frame</h3>
+                    <img id="currentFrame" class="video-frame" alt="Current frame">
+                </div>
+                
+                <div>
+                    <h3>Trajectory Visualization</h3>
+                    <canvas id="trajectoryCanvas" class="trajectory-canvas" width="800" height="400"></canvas>
+                </div>
+                
+                <div id="analysisStats">
+                    <h3>Analysis Statistics</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Frames Processed:</span>
+                            <span class="info-value" id="framesProcessed">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ball Detections:</span>
+                            <span class="info-value" id="ballDetections">0</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Average Confidence:</span>
+                            <span class="info-value" id="avgConfidence">0%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Trajectory Points:</span>
+                            <span class="info-value" id="trajectoryPoints">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        let analysisResults = null;
+        let currentFrameIndex = 0;
+
+        // DOM elements
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const videoInfo = document.getElementById('videoInfo');
+        const analysisControls = document.getElementById('analysisControls');
+        const noVideoMessage = document.getElementById('noVideoMessage');
+        const resultsSection = document.getElementById('resultsSection');
+
+        // Upload functionality
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            if (!file.type.startsWith('video/')) {
+                showStatus('Please select a valid video file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('video', file);
+
+            showStatus('Uploading video...', 'info');
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showStatus(data.error, 'error');
+                } else {
+                    currentSessionId = data.session_id;
+                    showVideoInfo(data);
+                    showStatus('Video uploaded successfully!', 'success');
+                    showAnalysisControls(data);
+                }
+            })
+            .catch(error => {
+                showStatus('Upload failed: ' + error.message, 'error');
+            });
+        }
+
+        function showVideoInfo(data) {
+            document.getElementById('filename').textContent = data.filename;
+            document.getElementById('resolution').textContent = `${data.resolution[0]}x${data.resolution[1]}`;
+            document.getElementById('fps').textContent = data.fps;
+            document.getElementById('totalFrames').textContent = data.total_frames;
+            
+            document.getElementById('endFrame').value = data.total_frames;
+            
+            videoInfo.style.display = 'block';
+        }
+
+        function showAnalysisControls(data) {
+            analysisControls.style.display = 'block';
+            noVideoMessage.style.display = 'none';
+        }
+
+        function showStatus(message, type) {
+            uploadStatus.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        // Analysis functionality
+        document.getElementById('analyzeBtn').addEventListener('click', startAnalysis);
+
+        function startAnalysis() {
+            if (!currentSessionId) return;
+
+            const startFrame = parseInt(document.getElementById('startFrame').value);
+            const endFrame = parseInt(document.getElementById('endFrame').value);
+            const stepSize = parseInt(document.getElementById('stepSize').value);
+
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const analyzeLoading = document.getElementById('analyzeLoading');
+            const analysisStatus = document.getElementById('analysisStatus');
+
+            analyzeBtn.disabled = true;
+            analyzeLoading.style.display = 'inline-block';
+            analyzeBtn.textContent = 'Analyzing...';
+
+            analysisStatus.innerHTML = '<div class="status info">Starting analysis...</div>';
+
+            fetch(`/analyze/${currentSessionId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start_frame: startFrame,
+                    end_frame: endFrame,
+                    step_size: stepSize
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    analysisStatus.innerHTML = `<div class="status error">${data.error}</div>`;
+                } else {
+                    analysisResults = data;
+                    analysisStatus.innerHTML = '<div class="status success">Analysis completed successfully!</div>';
+                    showResults();
+                }
+            })
+            .catch(error => {
+                analysisStatus.innerHTML = `<div class="status error">Analysis failed: ${error.message}</div>`;
+            })
+            .finally(() => {
+                analyzeBtn.disabled = false;
+                analyzeLoading.style.display = 'none';
+                analyzeBtn.textContent = 'Start Analysis';
+            });
+        }
+
+        function showResults() {
+            if (!analysisResults) return;
+
+            resultsSection.style.display = 'block';
+            
+            // Update statistics
+            document.getElementById('framesProcessed').textContent = analysisResults.total_frames_processed;
+            document.getElementById('trajectoryPoints').textContent = analysisResults.trajectory.length;
+            
+            // Get results data
+            fetch(`/results/${currentSessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        displayFrame(data.results[0]);
+                        drawTrajectory(data.trajectory);
+                        updateStatistics(data.results);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to load results:', error);
+                });
+        }
+
+        function displayFrame(result) {
+            const currentFrameImg = document.getElementById('currentFrame');
+            if (result.frame_image) {
+                currentFrameImg.src = result.frame_image;
+            }
+        }
+
+        function drawTrajectory(trajectory) {
+            const canvas = document.getElementById('trajectoryCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (trajectory.length < 2) return;
+            
+            // Find bounds
+            const xCoords = trajectory.map(p => p[0]);
+            const yCoords = trajectory.map(p => p[1]);
+            const minX = Math.min(...xCoords);
+            const maxX = Math.max(...xCoords);
+            const minY = Math.min(...yCoords);
+            const maxY = Math.max(...yCoords);
+            
+            const padding = 20;
+            const scaleX = (canvas.width - 2 * padding) / (maxX - minX || 1);
+            const scaleY = (canvas.height - 2 * padding) / (maxY - minY || 1);
+            const scale = Math.min(scaleX, scaleY);
+            
+            // Draw trajectory
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let i = 0; i < trajectory.length; i++) {
+                const x = (trajectory[i][0] - minX) * scale + padding;
+                const y = (trajectory[i][1] - minY) * scale + padding;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            
+            ctx.stroke();
+            
+            // Draw points
+            ctx.fillStyle = '#667eea';
+            for (let i = 0; i < trajectory.length; i++) {
+                const x = (trajectory[i][0] - minX) * scale + padding;
+                const y = (trajectory[i][1] - minY) * scale + padding;
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+
+        function updateStatistics(results) {
+            const detections = results.filter(r => r.ball_position !== null).length;
+            const avgConfidence = results.reduce((sum, r) => sum + r.confidence, 0) / results.length;
+            
+            document.getElementById('ballDetections').textContent = detections;
+            document.getElementById('avgConfidence').textContent = `${(avgConfidence * 100).toFixed(1)}%`;
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (currentSessionId) {
+                fetch(`/cleanup/${currentSessionId}`, { method: 'DELETE' })
+                    .catch(error => console.error('Cleanup failed:', error));
+            }
+        });
+    </script>
+</body>
+</html> 

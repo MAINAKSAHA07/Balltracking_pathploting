@@ -19,6 +19,7 @@ This project demonstrates real-time ball tracking with live trajectory visualiza
 - **Color-based and motion-based ball detection**
 - **Trajectory smoothing and alpha blending**
 - **Video saving capabilities**
+- **🌐 Web Application** for real-time video upload and analysis
 
 ## 🚀 Quick Start
 
@@ -39,25 +40,40 @@ uv run trajectory
 uv run python src/ball_tracking/trajectory_rerun.py
 ```
 
-### Command Line Options
+### 🌐 Web Application
+```bash
+uv run web
+```
+Then open http://localhost:5000 in your browser to upload and analyze videos!
 
-#### Tracking Script Options
-- `--video-path`: Path to input video file (defaults to interactive selection if not specified)
-- `--alpha-blending`: Use alpha blending to smooth the trajectory
-- `--trajectory-length`: Number of frames to keep in the trajectory (default: 40)
-- `--skip-seconds`: Number of seconds to skip in the video (default: 1.0)
-- `--loop`: Loop the video
-- `--show-masks`: Show the masks used for filtering
-- `--save-video`: Save the video with the tracked ball
+## 🌐 Web Application Features
 
-#### Trajectory Script Options
-- `--video-path`: Path to input video file (defaults to interactive selection if not specified)
-- `--loop`: Loop the video
-- `--show-masks`: Show the masks used for filtering
-- `--save-video`: Save the video with the tracked ball
+The web application provides a modern, user-friendly interface for ball tracking analysis:
 
-#### Trajectory Rerun Script Options
-- `--video-path`: Path to the video file (default: media/kick1.mov)
+### ✨ Key Features
+- **Drag & Drop Upload**: Easy video file upload with drag-and-drop support
+- **Real-time Analysis**: Process videos frame-by-frame with customizable parameters
+- **Live Visualization**: See the ball tracking in real-time with trajectory overlay
+- **Interactive Controls**: Adjust start/end frames and processing step size
+- **Statistics Dashboard**: View detailed analysis statistics and confidence metrics
+- **Responsive Design**: Works on desktop and mobile devices
+- **Session Management**: Automatic cleanup of uploaded files and analysis sessions
+
+### 🎯 Supported Video Formats
+- MP4, AVI, MOV, MKV, WEBM
+- Maximum file size: 100MB
+- Any resolution supported
+
+### 🔧 Analysis Parameters
+- **Start Frame**: Begin analysis from a specific frame
+- **End Frame**: Stop analysis at a specific frame
+- **Step Size**: Process every Nth frame for faster analysis
+
+### 📊 Analysis Results
+- **Frame-by-frame tracking**: See each processed frame with ball detection
+- **Trajectory visualization**: Interactive canvas showing ball path
+- **Statistics**: Frames processed, ball detections, confidence scores
+- **Real-time progress**: Live progress bar during analysis
 
 ## 📦 Installation
 
@@ -82,7 +98,70 @@ uv run python src/ball_tracking/trajectory_rerun.py
    uv run tracking  # For real-time tracking
    uv run trajectory  # For trajectory analysis
    uv run python src/ball_tracking/trajectory_rerun.py  # For Rerun visualization
+   uv run web  # For web application
    ```
+
+## 🚀 Deployment
+
+### Local Development
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the web application
+python -m ball_tracking.web
+```
+
+### Production Deployment
+
+1. **Setup the application**:
+   ```bash
+   python deploy.py
+   ```
+
+2. **Using Gunicorn (recommended for production)**:
+   ```bash
+   pip install gunicorn
+   gunicorn -w 4 -b 0.0.0.0:5000 ball_tracking.web:app
+   ```
+
+3. **Environment Variables**:
+   ```bash
+   export FLASK_ENV=production
+   export FLASK_DEBUG=0
+   export MAX_CONTENT_LENGTH=104857600
+   ```
+
+4. **Reverse Proxy Setup (Nginx example)**:
+   ```nginx
+   server {
+       listen 80;
+       server_name your-domain.com;
+       
+       location / {
+           proxy_pass http://127.0.0.1:5000;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+           proxy_set_header X-Forwarded-Proto $scheme;
+       }
+   }
+   ```
+
+### Docker Deployment
+```dockerfile
+FROM python:3.13-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+RUN mkdir -p uploads results logs
+
+EXPOSE 5000
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "ball_tracking.web:app"]
+```
 
 ## 📁 Project Structure
 
@@ -94,7 +173,10 @@ src/ball_tracking/
 ├── trajectory.py        # Trajectory analysis with physics prediction
 ├── trajectory_rerun.py  # Advanced visualization using Rerun SDK
 ├── video_loop.py        # Video processing utilities with looping support
-└── colormap.py          # Color mapping utilities for trajectory visualization
+├── colormap.py          # Color mapping utilities for trajectory visualization
+├── web.py              # 🌐 Web application with Flask
+└── templates/
+    └── index.html      # Modern web interface
 
 media/                   # Sample video files
 ├── ball.mp4
@@ -102,6 +184,11 @@ media/                   # Sample video files
 ├── ball3.mp4
 ├── ball4.mp4
 └── kick1.MOV
+
+uploads/                 # Uploaded video files (created automatically)
+results/                 # Analysis results (created automatically)
+requirements.txt         # Python dependencies
+deploy.py               # Deployment script
 ```
 
 ## 📈 Technical Implementation
