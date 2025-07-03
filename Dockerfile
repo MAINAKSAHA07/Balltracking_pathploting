@@ -5,6 +5,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV FLASK_ENV=production
 ENV FLASK_DEBUG=0
+ENV PYTHONPATH=src
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -44,4 +45,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5001/health || exit 1
 
 # Run the application
-CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "4", "--timeout", "120", "ball_tracking.web:app"] 
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:$PORT", "ball_tracking.web:app"] 
