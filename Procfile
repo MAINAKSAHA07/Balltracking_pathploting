@@ -1,0 +1,1 @@
+web: PYTHONPATH=src gunicorn -w 4 -b 0.0.0.0:$PORT ball_tracking.web:app 
